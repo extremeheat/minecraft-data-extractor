@@ -1,0 +1,20 @@
+[submodule "java/minecraft-jar-extractor"]
+	path = java/minecraft-jar-extractor
+	url = https://github.com/extremeheat/minecraft-jar-extractor.git
+
+[submodule "java/MCPConfig"]
+	path = java/MCPConfig
+	url = https://github.com/MinecraftForge/MCPConfig.git
+
+[submodule "java/Burger"]
+	path = java/Burger
+	url = https://github.com/extremeheat/Burger.git
+	branch = 1.16-dev
+
+[submodule "java/DecompilerMC"]
+	path = java/DecompilerMC
+	url = https://github.com/extremeheat/DecompilerMC.git
+
+[submodule "java/burger-extractor"]
+	path = java/burger-extractor
+	url = https://github.com/extremeheat/burger-extractor.git
