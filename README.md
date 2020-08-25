@@ -18,7 +18,8 @@ TODO:
 ```sh
 git pull --recursive https://github.com/extremeheat/minecraft-data-extractor
 cd java
-pip3 install six>=1.4.0 && pip3 install Jawa>=2.2.0,<3 # burger deps
+# You need to install python3, pip3 and the following for Burger:
+pip3 install six>=1.4.0 && pip3 install Jawa>=2.2.0
 python3 run.py --help
 ```
 ```
@@ -49,10 +50,13 @@ will be in output/.
 ```
 
 * Decompile all versions since 1.7 and generate diffs in diffs/
-python3 run.py --decompile all
+
+`python3 run.py --decompile all`
 
 * Run extractors on 1.16.2
-python3 run.py --extract 1.16.2
+
+`python3 run.py --extract 1.16.2`
 
 * Decompile, extract, generate diffs between 1.16.1 and 1.16.2
-python3 run.py --version 1.16.1,1.16.2 --diff --decompile --extract
+
+`python3 run.py --version 1.16.1,1.16.2 --diff --decompile --extract`

@@ -61,7 +61,7 @@ def run_burger_extractor(version, overwrite=False):
     version_before = utils.get_version_before(version)
     assert version_before # should never happen
 
-    l = f"node src\index.js ../{i} {version_before}"
+    l = f"node src/index.js ../{i} {version_before}"
     print(c.WARNING, ">", l, c.RESET)
     os.system(l)
 
