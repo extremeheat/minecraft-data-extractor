@@ -44,15 +44,27 @@ def move(start,end):
     else:
         os.system(f"mv {start} {end}")
 
+
+fs_writes = []
+
+def journal_write(path):
+    fs_writes.append(os.path.abspath(path))
+
+def get_journal_writes():
+    return fs_writes
+
 loaded_manifest = None
 
-def fetch_manifest():
+def fetch_manifest(erase=False):
     global loaded_manifest
     os.chdir('DecompilerMC')
+    os.makedirs('versions', exist_ok=True)
     try:
-        os.mkdir('versions')
+        if erase:
+            os.remove('versions/version_manifest.json')
         get_global_manifest(False)
-    except Exception:
+    except Exception as e:
+        print("Failed to get global manifest", e)
         pass # manifest probably exists
 
     with open('versions/version_manifest.json', 'r') as f:
@@ -95,6 +107,18 @@ def get_decompiled_version(version):
         return f'DecompilerMC/src/{version}'
     return None
 
+def get_versions(includeSnapshots=False):
+    versions = []
+
+    j = get_manifest()
+
+    for version in j['versions']:
+        if version['type'] == 'snapshot' and not includeSnapshots:
+            continue
+        v = version['id']
+        versions.append(v)
+
+    return versions
 
 def get_versions_since(version, includeSnapshots=False):
     do = get_date_for_version(version)
@@ -179,7 +203,16 @@ def extrapolate_versions(versions):
                 _vers.pop()
         else:
             _vers = [version]
-    return versions
+    else:
+        mversions = get_versions(includeSnapshots=True)
+
+        for version in versions:
+            if version not in mversions:
+                raise ValueError("Not a valid version: " + version + ", run with --version ?")
+
+        _vers = versions
+
+    return _vers
 
 # pretty colors :)
 

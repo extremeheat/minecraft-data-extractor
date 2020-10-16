@@ -15,7 +15,8 @@ Specify the version(s) you want to work with per syntax
 	`-v <1.13` will select all versions below 1.13
 	`-v 1.12.2` will select 1.12, -v 1
 	`-v 1.16,1.16.1` will select 1.16 and 1.16.1... so forth.
-You can also use "all", "latest" or "snapshot"
+You can also use "all", "latest" or "snapshot".
+To get a list of versions, use -v ?
 """
 
 EPILOG = """
@@ -37,14 +38,14 @@ def make_pairs(l):
 
 def _gen_diffs(ver1,ver2,mapping,allowOverwrite=False):
     n = f"{ver1}__{ver2}__{mapping}.diff"
-    
+    utils.journal_write('../../diffs/' + n)
     if os.path.isfile('../../diffs/' + n) and not allowOverwrite:
         print(utils.c.WARNING, n, "already was generated! Skipping.", utils.c.RESET)
         return
     
     # print('../../diffs/' + n)
     
-    print(f"{mapping} diffing {ver1} and {ver1}... Deleting META-INF...")
+    print(f"{mapping} diffing {ver1} and {ver2}... Deleting META-INF...")
     utils.rmdir(f"{ver1}_{mapping}/client/META-INF/")
     utils.rmdir(f"{ver2}_{mapping}/client/META-INF/")
     l = f"git diff --no-index {ver1}_{mapping} {ver2}_{mapping} > {n}"
@@ -59,9 +60,10 @@ def gen_diffs(ver1=None, ver2=None):
         print(c.BOLD,"Diffing all versions",c.RESET)
 
     if not utils.has_dir('DecompilerMC/src/'):
-        print("You need to run --decompile before you can diff")
+        print("Not decompiled yet, run again with --decompile")
         return False
 
+    os.makedirs('diffs', exist_ok=True)
     os.chdir('DecompilerMC/src/')
 
     mcp = []
@@ -89,9 +91,10 @@ def gen_diffs(ver1=None, ver2=None):
             found = True
 
         if not found:
-            print(utils.c.FAIL, f"Coudn't diff {ver1} and {ver2} because you haven't decompiled them. List of possible versions:", utils.c.RESET)
-            print("MCP Sorted: ", mcp)
-            print("Mojang sorted: ", mojang)
+            print(utils.c.FAIL, f"Couldn't diff {ver1} and {ver2} because you haven't decompiled them. Run again with --decompile.", utils.c.RESET)
+            # print("MCP Sorted: ", mcp)
+            # print("Mojang sorted: ", mojang)
+            return False
     else:
         mcp_pairs = make_pairs(mcp)
         moj_pairs = make_pairs(mojang)
@@ -111,11 +114,64 @@ def gen_diffs(ver1=None, ver2=None):
                 os.remove(f"../../diffs/{name}")
             except Exception:
                 pass
-            os.rename(name, f"../../diffs/{name}")
-    
-
+            utils.move(name, f"../../diffs/{name}")
 
     os.chdir('..')
+    return True
+
+def print_versions():
+    utils.fetch_manifest(erase=True)
+    manifest = utils.get_manifest()
+
+    latest_release = manifest['latest']['release']
+    latest_snapshot = manifest['latest']['snapshot']
+    # print(latest_release, latest_snapshot)
+
+    release_data = None
+    snapshot_data = None
+    
+    vs = []
+    newest_version = []
+
+    for version in manifest['versions']:
+        vid = version['id']
+        if vid == latest_release:
+            release_data = version
+        if vid == latest_snapshot:
+            snapshot_data = version
+
+        if version['type'] == 'release':
+            vs.append(c.OKGREEN + vid + c.RESET)
+        else:
+            vs.append(vid)
+
+    latest_rel_time = release_data['releaseTime']
+    latest_snap_time = snapshot_data['releaseTime']
+
+    pb = [
+        'LATEST:',
+        f'\trelease {latest_release} ({latest_rel_time})',
+        f'\tsnapshot {latest_snapshot} ({latest_snap_time})',
+        'HISTORY:',
+        f'\t{", ".join(vs)}'
+    ]
+
+    # print(manifest)
+    print('\n'.join(pb))
+
+def clean(args, versions=None):
+    if not versions:
+        # utils.rmdir('DecompilerMC/src/')
+        # utils.rmdir('output/')
+        return
+    else:
+        print('Erasing: ')
+        print(utils.get_journal_writes())
+        i = 0
+        for filename in utils.get_journal_writes():
+            os.remove(filename)
+            i += 1
+        print(f"Erased {i} files")
 
 
 # TODO: update git submodules when run...
@@ -124,11 +180,11 @@ def gen_diffs(ver1=None, ver2=None):
 
 def main():
     parser = argparse.ArgumentParser('minecraft-data-extractor', epilog=EPILOG)
-    parser.add_argument("--version", help=VERSION_HELP, required=True)
+    parser.add_argument("-v", "--version", help=VERSION_HELP, required=True)
     parser.add_argument("--decompile", help="Decompile speicifed version", action='store_true')
     parser.add_argument("--extract", nargs='?', help="Possible extractors: burger, burger-extractor, jar-extractor, builtin. Seperate with commas. If none specified, all will be run.", const='')
     parser.add_argument("--diffs", help="Generate git diffs from decompiled versions", action='store_true')
-    parser.add_argument("--clean", help="Cleans versions", action='store_true')
+    parser.add_argument("--clean", help="Erase data on completion (dry run).", action='store_true')
     
     parser.add_argument("--ignoreMappings", help="Decompile even if mappings are not found", action='store_true')
 
@@ -138,6 +194,11 @@ def main():
 
     versions = []
     _versions = args.version
+
+    if '?' in _versions:
+        print_versions()
+        return
+
     if _versions == 'all':
         versions = []
     elif ',' in _versions and ('>' in _versions or '<' in _versions):
@@ -148,7 +209,7 @@ def main():
         versions = _versions.split(',')
 
     if args.decompile:
-        # print("Decom",versions,_versions)
+        print("Decom",versions,_versions)
         decompiler.run(versions, ignoreMappings=args.ignoreMappings)
     
     if args.extract != None:
@@ -170,13 +231,12 @@ def main():
         else:
             gen_diffs()
 
+    print(f"Done: {len(utils.get_journal_writes())} files written")
+
     if args.clean:
-        print("clean not yet implemented, delete the files in DecompilerMC/src/ and output/")
+        clean(args, versions or _versions)
         pass
 
-# python3 run.py --version 1.2,1.3 --decompile --diffs
-# python3 run.py --reset-everything
-# Will run git reset --hard && git clean -fd
 
 if __name__ == "__main__":
     main()

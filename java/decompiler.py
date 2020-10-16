@@ -29,36 +29,6 @@ def cleanup_version(version):
     shutil.rmtree(f'DecompilerMC/src/{version}_mojang/')
     return True
 
-# def get_versions_since(versionId, includeSnapshots):
-#     assert type(versionId) == int
-#     # open manifest
-
-#     # maybe instead of passing an int versionId we could just pass in a version,
-#     # convert it to a unix ts and then get all the versions after it?
-#     do = get_date_for_version('1.%d' % versionId)
-
-#     versions = []
-
-#     j = utils.get_manifest()
-
-#     for version in j['versions']:
-#         v = version['id']
-#         if '.' not in v:
-#             if includeSnapshots and version['type'] != 'release':
-#                 versions.append(version)
-#         else:
-#             dn = utils.get_unix_from_iso8601(version['date'])
-#             if do < dn: # Version is older that versionId
-#                 continue
-
-#             s = v.split('.')
-#             print (s)
-#             minor = reads[1])
-
-#             if minor > versionId:
-#                 if version['type'] == 'release' or includeSnapshots:
-#                     versions.append(version)
-
 # returns path to tsrg / srg (legacy) for md_5's SpecialSource remapper
 def get_mcp_mappings_for(version):
     p = f'./MCPConfig/versions/release/{version}/joined.tsrg'
@@ -148,19 +118,6 @@ def decompile_version(version, ignoreMappings=False):
     if isLegacy or (vid == MC_15_0) or (vid == MC_14_4):
         mapping = get_mcp_mappings_for(version)
         print(f'{version}: Using MCP mappings at', mapping)
-        # print(mapping)
-        # vdir = f"{D}/mappings/"
-        # if not has_dir(vdir):
-        #     os.mkdir(vdir)
-        # if not has_dir(vdir + version):
-        #     os.mkdir(vdir + version)
-        # print(f'{vdir + version}/client.tsrg')
-        # if os.path.isfile(f'{vdir + version}/client.tsrg'):
-        #     os.remove(f'{vdir + version}/client.tsrg')
-
-        # srg = f'{D}/mappings/{version}/'
-        # print(f'> copy {mapping} {srg}')
-        # copy2(mapping, srg)
 
         os.chdir(D)
         l = f"python3 main.py -mcv {version} -na -rmap false --download_mapping false -dj true -rjar true -dec true -dd false -d fernflower -m ../{mapping} {quiet}"

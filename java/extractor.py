@@ -36,6 +36,7 @@ def clean_vesrsion(ver):
 BURGER_TOPPINGS = ['biomes', 'blocks', 'blockstates', 'entities', 'entitymetadata', 'identify', 'items', 'language', 'objects', 'packetinstructions', 'packets', 'particletypes', 'recipes', 'sounds', 'stats', 'tags', 'tileentities', 'version']
 
 def run_burger(version, overwrite=False):
+    utils.journal_write(f"output/burger_{version}.json")
     if os.path.isfile(f"output/burger_{version}.json") and not overwrite:
         print(c.BOLD, "Not running Burger on ", version, 'because was already generated.', c.RESET)
         return True
@@ -65,6 +66,10 @@ def run_burger_extractor(version, overwrite=False):
     print(c.WARNING, ">", l, c.RESET)
     os.system(l)
 
+    for filename in os.listdir('out'):
+        if filename.endswith('.json'):
+            utils.journal_write(f"../output/minecraft-data/{version}/{filename}")
+
     os.makedirs(f"../output/minecraft-data/{version}/", exist_ok=True)
     utils.move("out/*.json", f"../output/minecraft-data/{version}/")
 
@@ -85,11 +90,12 @@ def run_prismarine_jar_extractor(version):
 
     print("Running minecraft-jar-extractor...")
 
-    if utils.mc_version_cmp(version, '1.13') < 0 and utils.mc_version_cmp(version, '1.7') > 0:
+    if utils.mc_version_cmp(version, '1.7') > 0:
         ## image name extractor
         a = f"node image_names.js {version} ../output/minecraft-assets ../{dp}/client"
         print(c.WARNING, '>', a, c.RESET)
-
+        utils.journal_write('../output/minecraft-assets/*')
+        os.system(a)
 
     b = f"node lang.js {version} ../output/minecraft-data ../{dp}/client"
     print(c.WARNING, '>', b, c.RESET)
@@ -100,10 +106,7 @@ def run_prismarine_jar_extractor(version):
         # which we copy over to our output dir.
         os.makedirs(f"data/{version}/data", exist_ok=True)
         os.makedirs(f"data/pc/{version}/", exist_ok=True)
-        # shutil.rmtree(f"data/{version}/data")
-        # os.symlink(f"../{dp}/client/data/minecraft/", f"data/{version}/data/")
-        # print(f"> copy ../{dp}/client/data/minecraft/loot_tables/ data/{version}/data/")
-        # shutil.copytree(f"../{dp}/client/data/minecraft/loot_tables/", f"data/{version}/data/")
+
         utils.move(f"../{dp}/client/data/minecraft/loot_tables", f"data/{version}/data/")
         a = f"node extract_lootTables.js {version} data ."
         print(c.WARNING, '>', a, c.RESET)
@@ -111,13 +114,14 @@ def run_prismarine_jar_extractor(version):
         # move data back
         utils.move(f"data/{version}/data/loot_tables", f"../{dp}/client/data/minecraft/")
         os.makedirs(f"../output/minecraft-data/{version}/", exist_ok=True)
+        for filename in os.listdir(f"data/pc/{version}/*.json"):
+            if filename.endswith('.json'):
+                utils.journal_write(f"../output/minecraft-data/{version}/{filename}")
         utils.move(f"data/pc/{version}/*.json", f"../output/minecraft-data/{version}/")
 
     os.chdir('..')
 
     return True
-
-
 
 def run(versions=[], runBurger=True, runBE=True, runJarExtractor=True):
     install_node_jar_extractor()
@@ -129,7 +133,7 @@ def run(versions=[], runBurger=True, runBE=True, runJarExtractor=True):
     if not has_dir("output/minecraft-data"):
         os.makedirs("output/minecraft-data")
 
-    print("Extracting", _vers)
+    print("Extracting", versions, _vers)
 
     for version in _vers:
         if version in ('latest', 'snapshot', 'release'):
