@@ -30,6 +30,9 @@ def install_burger():
 
 def clean_vesrsion(ver):
     utils.rmdir('minecraft-jar-extractor/data')
+    utils.rmdir(f'output/minecraft-assets/{version}')
+    utils.rmdir(f'output/minecraft-data/{version}')
+    utils.rmdir(f'output/burger/{version}')
     pass
 
 # Toppings we want (everything)

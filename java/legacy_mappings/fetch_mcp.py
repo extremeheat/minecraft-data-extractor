@@ -1,4 +1,5 @@
 import json
+import sys
 import urllib.request
 import zipfile
 import os
@@ -36,6 +37,12 @@ for line in m.split('\n'):
         continue
     version = s[0]
 
+    if len(sys.argv) > 1:
+        wanted_versions = sys.argv
+        if version not in wanted_versions:
+            print("Skipping", version, "as version not specified in args")
+            continue
+
     print(version)
 
     url = f"http://files.minecraftforge.net/maven/de/oceanlabs/mcp/mcp/{version}/mcp-{version}-srg.zip"
@@ -48,7 +55,7 @@ for line in m.split('\n'):
 
         with zipfile.ZipFile(z, 'r') as f:
             f.extractall(version)
-            shutil.rmtree(f'./{version}/patches/')
+            # shutil.rmtree(f'./{version}/patches/')
             # try:
                 # os.rmdir(f'./{version}/patches/')
             # except Exception:

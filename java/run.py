@@ -160,7 +160,11 @@ def print_versions():
     print('\n'.join(pb))
 
 def clean(args, versions=None):
-    if not versions:
+    # user not decompiling/extracting, just erasing
+    if not args.decompile and not args.extract:
+        print("Erasing data for version",versions)
+        for version in versions:
+            decompiler.cleanup_version(version)
         # utils.rmdir('DecompilerMC/src/')
         # utils.rmdir('output/')
         return
@@ -234,7 +238,7 @@ def main():
     print(f"Done: {len(utils.get_journal_writes())} files written")
 
     if args.clean:
-        clean(args, versions or _versions)
+        clean(args, versions)
         pass
 
 
