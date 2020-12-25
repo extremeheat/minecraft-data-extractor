@@ -13,7 +13,9 @@ Features:
 TODO:
 * Updating -- please update with git pull && git submodule sync --recursive
 
-### Examples
+### Install
+
+#### via local install
 
 Please note you need Python 3.6+ (make sure your python3 points to proper version), Node.js 14+, and Git. JDK is needed if you intend to decompile.
 
@@ -24,6 +26,8 @@ cd java
 pip3 install six>=1.4.0 && pip3 install Jawa>=2.2.0
 python3 run.py --help
 ```
+
+### Usage
 
 ```
 usage: minecraft-data-extractor [-h] -v VERSION [--decompile]
