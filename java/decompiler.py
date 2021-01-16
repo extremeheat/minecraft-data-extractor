@@ -46,7 +46,7 @@ def get_mcp_mappings_for(version):
 
 
 # if we don't have mappings for this version (mcp/mojang), do not decompile without ignoreMappings=True
-def decompile_version(version, ignoreMappings=False):
+def decompile_version(version, client=True, ignoreMappings=False):
     # version id
     vid = 0
 
@@ -111,7 +111,8 @@ def decompile_version(version, ignoreMappings=False):
         print(f"{version}: no mapping data! JAR will only be decompiled. Abort now if you expected deobfuscation.", failedBecauseNoMappings, vid, MC_7_10)
         input("Press enter to continue.")
         # do not remap and basically just run fernflower
-        l = f"python3 {D}/main.py -mcv {version} -na -rmap false --download_mapping false -dj true -rjar false -dec true -dd false -d fernflower"
+        s = '' if client else '--side server'
+        l = f"python3 {D}/main.py -mcv {version} -na -rmap false --download_mapping false -dj true -rjar false -dec true -dd false -d fernflower {s}"
         print("> ", l)
         return
 
@@ -121,7 +122,8 @@ def decompile_version(version, ignoreMappings=False):
         print(f'{version}: Using MCP mappings at', mapping)
 
         os.chdir(D)
-        l = f"python3 main.py -mcv {version} -na -rmap false --download_mapping false -dj true -rjar true -dec true -dd false -d fernflower -m ../{mapping} {quiet}"
+        s = '' if client else '--side server'
+        l = f"python3 main.py -mcv {version} -na -rmap false --download_mapping false -dj true -rjar true -dec true -dd false -d fernflower {s} -m ../{mapping} {quiet}"
         print(c.WARNING, ">", l, c.RESET)
         ret = os.system(l)
         if ret:
@@ -136,7 +138,8 @@ def decompile_version(version, ignoreMappings=False):
     if not isLegacy:
         print(f"{version}: Using Mojang mappings")
         os.chdir(D)
-        l = f"python3 main.py -mcv {version} -d fernflower {quiet}"
+        s = '' if client else '--side server'
+        l = f"python3 main.py -mcv {version} -d fernflower {quiet} {s}"
         print(c.WARNING, "> ", l, c.RESET)
         os.system(l)
         os.rename(f"src/{version}/", f"src/{version}_mojang/")
@@ -276,10 +279,11 @@ def apply_patches(version):
 
 # end patching
 
-def already_decompiled(version):
-    return has_dir(f'DecompilerMC/src/{version}') or has_dir(f'DecompilerMC/src/{version}_mcp') or has_dir(f'DecompilerMC/src/{version}_mojang')
+def already_decompiled(version, client=True):
+    s = 'client' if client else 'server'
+    return has_dir(f'DecompilerMC/src/{version}/{s}') or has_dir(f'DecompilerMC/src/{version}_mcp/{s}') or has_dir(f'DecompilerMC/src/{version}_mojang/{s}')
 
-def run(versions=[], actionOnExists='skip', ignoreMappings=False):
+def run(versions=[], client=True, actionOnExists='skip', ignoreMappings=False):
     utils.fetch_manifest()
 
     install_minecraft_decompiler()
@@ -289,14 +293,14 @@ def run(versions=[], actionOnExists='skip', ignoreMappings=False):
     print(c.BOLD, "Decompiling", _vers, c.RESET)
 
     for _ver in _vers:
-        if already_decompiled(_ver):
+        if already_decompiled(_ver, client):
             if actionOnExists == 'skip':
                 print(c.WARNING, f"Skipping {_ver} because already exists. If you didn't expect this, run `python3 run.py --version {_ver} --clean`", c.RESET)
                 continue
             elif actionOnExists == 'delete':
                 cleanup_version(_ver)
         
-        decompile_version(_ver, ignoreMappings)
+        decompile_version(_ver, client, ignoreMappings)
 
 # set_verbose(False)
 # run([])

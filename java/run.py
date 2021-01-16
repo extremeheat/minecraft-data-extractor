@@ -189,7 +189,7 @@ def main():
     parser.add_argument("--extract", nargs='?', help="Possible extractors: burger, burger-extractor, jar-extractor, builtin. Seperate with commas. If none specified, all will be run.", const='')
     parser.add_argument("--diffs", help="Generate git diffs from decompiled versions", action='store_true')
     parser.add_argument("--clean", help="Erase data on completion (dry run).", action='store_true')
-    
+    parser.add_argument('--server', help="Decompile server instead of client", action='store_true')
     parser.add_argument("--ignoreMappings", help="Decompile even if mappings are not found", action='store_true')
 
     args = parser.parse_args()
@@ -213,8 +213,8 @@ def main():
         versions = _versions.split(',')
 
     if args.decompile:
-        print("Decom",versions,_versions)
-        decompiler.run(versions, ignoreMappings=args.ignoreMappings)
+        print("Decompile ",versions,_versions, 'server' if args.server else 'client')
+        decompiler.run(versions, client=not args.server, ignoreMappings=args.ignoreMappings)
     
     if args.extract != None:
         toppings_ava = ['burger', 'burger-extractor', 'jar-extractor', 'builtin']
