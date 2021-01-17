@@ -8,7 +8,7 @@ from utils import c, has_dir
 from shutil import copy2
 
 
-verbose = True
+verbose = False
 
 def set_verbose(val):
     global verbose
@@ -109,7 +109,7 @@ def decompile_version(version, client=True, ignoreMappings=False):
             raise "Decompile failed - non-zero exit code"
 
         print(c.WARNING, f"> move {D}/src/{version} {D}/src/{version}_mcp/", c.RESET)
-        os.rename(f"src/{version}/", f"src/{version}_mcp/")
+        utils.move(f"src/{version}/", f"src/{version}_mcp/")
         print(c.OKGREEN, f"{version} was successfully decompiled to {D}/src/{version}_mcp/", c.RESET)
         os.chdir('..')
 
@@ -121,7 +121,7 @@ def decompile_version(version, client=True, ignoreMappings=False):
         l = f"python3 main.py -mcv {version} -d fernflower {quiet} {s}"
         print(c.WARNING, "> ", l, c.RESET)
         os.system(l)
-        os.rename(f"src/{version}/", f"src/{version}_mojang/")
+        utils.move(f"src/{version}/", f"src/{version}_mojang/")
         print(c.OKGREEN, f"{version} was successfully decompiled to {D}/src/{version}_mojang/", c.RESET)
         os.chdir('..')
 
