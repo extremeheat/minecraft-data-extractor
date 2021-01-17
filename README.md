@@ -17,11 +17,11 @@ TODO:
 
 #### via local install
 
-Please note you need Python 3.6+ (make sure your python3 points to proper version), Node.js 14+, and Git. JDK is needed if you intend to decompile.
+Please note you need Python 3.7+ (make sure your python3 points to proper version), Node.js 14+, and Git. JDK is needed if you intend to decompile.
 
 ```sh
 git clone --recursive https://github.com/extremeheat/minecraft-data-extractor.git
-cd java
+cd minecraft-data-extractor && cd java
 # You need to install python3, pip3 and the following for Burger:
 pip3 install six>=1.4.0 && pip3 install Jawa>=2.2.0
 python3 run.py --help
@@ -32,7 +32,7 @@ python3 run.py --help
 ```
 usage: minecraft-data-extractor [-h] -v VERSION [--decompile]
                                 [--extract [EXTRACT]] [--diffs] [--clean]
-                                [--ignoreMappings]
+                                [--server] [--ignoreMappings]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -51,6 +51,7 @@ optional arguments:
                         specified, all will be run.
   --diffs               Generate git diffs from decompiled versions
   --clean               Erase data on completion (dry run).
+  --server              Decompile server instead of client
   --ignoreMappings      Decompile even if mappings are not found
 
 Arg parsing order: run decompile, extract, make diffs, clean The output to
@@ -60,7 +61,7 @@ will be in output/.
 
 * Decompile all versions since 1.7 and generate diffs in diffs/
 
-`python3 run.py --version all --decompile`
+`python3 run.py --version all --decompile --diff`
 
 * Run extractors on 1.16.2
 
