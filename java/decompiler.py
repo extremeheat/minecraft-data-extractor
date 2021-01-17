@@ -47,45 +47,22 @@ def get_mcp_mappings_for(version):
 
 # if we don't have mappings for this version (mcp/mojang), do not decompile without ignoreMappings=True
 def decompile_version(version, client=True, ignoreMappings=False):
-    # version id
-    vid = 0
+    print("\n-------")
 
     print(c.BOLD, "Decompiling", version, "this will take a while", c.RESET)
 
     failedBecauseNoMappings = False
 
     # If you crash here, you set an invalid version to decompile
-    # if it looks complicated, its pretty simple: if normal dot release: 
-    #   1.16.2-pre2 --> [1, 16], plus a way to compare greater/less than versions
-    # else if snapshot:
-    #   check date of snapshot, if older than 1.15 we don't have mappings, ignore
     if version == "latest" or version == "snapshot":
         version = utils.get_latest_version(typ)
-    elif '.' not in version:
+    else:
         dn = utils.get_date_for_version(version)
-        if utils.mc_version_cmp(version, '1.15') < 0: # Snapshot is older than 1.15, we don't have mappings
-            failedBecauseNoMappings = True
-        else:
-            # it works ¯\_(ツ)_/¯
-            vid = dn
 
-    if '.' in version:
-        s = version.split('.')
-        minor = int(s[1])
-        try:
-            patch = utils.read_int(s[2])
-        except:
-            patch = 0
 
-        assert patch < 100
-
-        vid = (minor << 8) + patch
-
-    MC_7_10 = (7 << 8) + 10
     # We have Mojang mappings since 1.14.4
     # For both 1.14.4 and 1.15, we include both MCP and Mojang mappings (this just makes it easier to diff)
-    MC_14_4 = (14 << 8) + 4
-    MC_15_0 = (15 << 8) + 0
+    
     D = "./DecompilerMC"
 
     # DecompilerMC spits out alot of input()s which are annoying, --quiet removes them. Unfortuantely this
@@ -95,29 +72,31 @@ def decompile_version(version, client=True, ignoreMappings=False):
     # uses MCP mappings
     isLegacy = False
 
-    if vid < MC_14_4:
-        print(f"{version} < 1.14.4 -- legacy version so using MCP mappings", vid, MC_14_4)
+    if utils.mc_version_cmp(version, '1.14.4') < 0:
+        print(f"{version} < 1.14.4 -- legacy version so using MCP mappings")
         isLegacy = True
 
     if isLegacy:
         mapping = get_mcp_mappings_for(version)
         if not mapping:
+            print("No MCP mappings for", version)
             failedBecauseNoMappings = True
 
-    if failedBecauseNoMappings or (vid < MC_7_10):
+    if failedBecauseNoMappings or (utils.mc_version_cmp(version, '1.7.10') < 0):
         if not ignoreMappings:
             print(c.FAIL, f"{version}: no mapping data! Skipping because ignoreMappings is false.", c.RESET)
             return
-        print(f"{version}: no mapping data! JAR will only be decompiled. Abort now if you expected deobfuscation.", failedBecauseNoMappings, vid, MC_7_10)
+        print(f"{version}: no mapping data! JAR will only be decompiled. Abort now if you expected deobfuscation.")
         input("Press enter to continue.")
         # do not remap and basically just run fernflower
         s = '' if client else '--side server'
         l = f"python3 {D}/main.py -mcv {version} -na -rmap false --download_mapping false -dj true -rjar false -dec true -dd false -d fernflower {s}"
         print("> ", l)
+        os.system(l)
         return
 
     # MCP mappings
-    if isLegacy or (vid == MC_15_0) or (vid == MC_14_4):
+    if isLegacy or (utils.mc_version_cmp(version, '1.15') == 0) or (utils.mc_version_cmp(version, '1.14.4') == 0):
         mapping = get_mcp_mappings_for(version)
         print(f'{version}: Using MCP mappings at', mapping)
 
