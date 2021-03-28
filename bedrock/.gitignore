@@ -1,1 +1,3 @@
-map/**/*.json
+map/*
+!map/buildMappings.js
+__*
