@@ -159,7 +159,11 @@ function updateSubmodules() {
   cp.execSync('cd mappings && git pull', { cwd: __dirname })
 }
 
-updateSubmodules()
-let builder = new BlockMapper()
-builder.build(process.argv[2])
-console.log('✔ ok ->', process.argv[2])
+module.exports = (path) => {
+  updateSubmodules()
+  let builder = new BlockMapper()
+  builder.build(path)
+  console.log('✔ ok ->', path)
+}
+
+if (!module.parent) module.exports(process.argv[2])
