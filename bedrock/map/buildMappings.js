@@ -72,8 +72,8 @@ class BlockMapper {
     this.b2j = map
   }
 
-  buildBRID(bedrockBridPalette) {
-    var data = require(bedrockBridPalette)
+  buildBRID(states) {
+    const data = states
     let array = new Uint16Array(data.length)
     for (var i = 0; i < data.length; i++) {
       let e = data[i].value
@@ -137,7 +137,7 @@ class BlockMapper {
 
     // * Map Bedrock block runtime IDs to Block state strings and vice-versa
     {
-      this.buildBRID('./' + od + '/blocks/BlockStates.json')
+      this.buildBRID(states)
       // console.log(this.brid2bs)
       fs.writeFileSync(od + '/blocks/BRID.json', JSON.stringify(this.brid2bs))
       // console.log(this.bs2brid)
