@@ -100,7 +100,7 @@ class BlockMapper {
     let results = []
     data.startOffset = 0
 
-    while (data.startOffset !== data.length) {
+    while (data.startOffset !== data.byteLength) {
       const { parsed, metadata } = await nbt.parse(data)
       data.startOffset += metadata.size
       results.push(parsed)
@@ -119,7 +119,7 @@ class BlockMapper {
 
     // Copy over blockstates
     const states = await this.getBlockStates()
-    fs.writeFileSync(od + '/blocks/BlockStates.json', JSON.stringify(states, null, 2))
+    fs.writeFileSync(od + '/blocks/BlockStates.json', JSON.stringify(states, null, '\t'))
 
     // * Build Java BSS to Bedrock BSS map
     {
@@ -159,10 +159,10 @@ function updateSubmodules() {
   cp.execSync('cd mappings && git pull', { cwd: __dirname })
 }
 
-module.exports = (path) => {
+module.exports = async (path) => {
   updateSubmodules()
   let builder = new BlockMapper()
-  builder.build(path)
+  await builder.build(path)
   console.log('✔ ok ->', path)
 }
 

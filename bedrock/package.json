@@ -1,6 +1,6 @@
 {
   "name": "bedrock-extractor",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "minecraft bedrock data extractor",
   "main": "index.js",
   "bin": {
