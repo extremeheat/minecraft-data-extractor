@@ -1,3 +1,4 @@
 map/*
 !map/buildMappings.js
+!map/extraMappings.js
 __*

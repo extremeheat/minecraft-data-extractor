@@ -1,6 +1,7 @@
 const fs = require('fs')
 const nbt = require('prismarine-nbt')
 const cp = require('child_process')
+const extras = require('./extraMappings')
 const { join } = require('path')
 
 class BlockMapper {
@@ -20,7 +21,7 @@ class BlockMapper {
     for (var key in blocksJson) {
       let val = blocksJson[key]
       // map[key] = { bid: val.bedrock_identifier, bstates: val.bedrock_states }
-      let bkey = val.bedrock_identifier + '[' + this._concatStates(val.bedrock_states) + ']'
+      let bkey = val.bedrock_identifier + '[' + this._concatStatesJ2B(val.bedrock_states) + ']'
       key += key.includes('[') ? '' : '[]'
       map[key] = bkey
     }
@@ -48,7 +49,7 @@ class BlockMapper {
     this.j2brid = out
   }
 
-  _concatStates(states) {
+  _concatStatesJ2B(states) {
     let str = ''
     if (!states) return str
 
@@ -69,6 +70,12 @@ class BlockMapper {
       // map[bkey] = { j: key }
       map[val] = key
     }
+
+    const ex = extras.getPatches()
+    for (const key in ex.bedrock2java) {
+      let val = ex.bedrock2java[key]
+      map[key] = val
+    }
     this.b2j = map
   }
 
@@ -76,10 +83,10 @@ class BlockMapper {
     const data = states
     let array = new Uint16Array(data.length)
     for (var i = 0; i < data.length; i++) {
-      let e = data[i].value
+      let e = data[i]
       // console.log(e)
       let fname = ''
-      let name = e.name.value
+      let name = e.name
       let states = ''
       for (var stateId in e.states?.value) {
         let stateVal = e.states.value[stateId].value
@@ -103,7 +110,30 @@ class BlockMapper {
     while (data.startOffset !== data.byteLength) {
       const { parsed, metadata } = await nbt.parse(data)
       data.startOffset += metadata.size
-      results.push(parsed)
+
+      results.push({
+        name: parsed.value.name.value,
+        states: parsed.value.states,
+        version: parsed.value.version.value
+      })
+    }
+
+    return results
+  }
+
+  async getBlockStatesGeyser() {
+    const data = fs.readFileSync(join(__dirname, './BedrockData/geyser_block_states.nbt'))
+
+    const { parsed } = await nbt.parse(data)
+
+    const results = []
+
+    for (const block of parsed.value.blocks.value.value) {
+      results.push({
+        name: block.name.value,
+        states: block.states,
+        version: block.version.value
+      })
     }
 
     return results
@@ -118,7 +148,7 @@ class BlockMapper {
     } catch (e) { }
 
     // Copy over blockstates
-    const states = await this.getBlockStates()
+    const states = await this.getBlockStatesGeyser()
     fs.writeFileSync(od + '/blocks/BlockStates.json', JSON.stringify(states, null, '\t'))
 
     // * Build Java BSS to Bedrock BSS map
