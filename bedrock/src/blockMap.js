@@ -1,11 +1,14 @@
 const fs = require('fs')
 const nbt = require('prismarine-nbt')
-const cp = require('child_process')
 const extras = require('./extraMappings')
 const { join } = require('path')
+const assert = require('assert')
+
+const d = ([path]) => join(__dirname, 'deps', path)
 
 class BlockMapper {
-  constructor() {
+  constructor(version) {
+    this.version = version
     this.j2b = {}
     this.j2brid = {}
     this.b2j = {}
@@ -102,8 +105,8 @@ class BlockMapper {
     // this.brid2jsid
   }
 
-  async getBlockStates() {
-    const data = fs.readFileSync(join(__dirname, './BedrockData/canonical_block_states.nbt'))
+  async getBlockStatesPMMP() {
+    const data = fs.readFileSync(d`./BedrockData/canonical_block_states.nbt`)
     let results = []
     data.startOffset = 0
 
@@ -122,7 +125,7 @@ class BlockMapper {
   }
 
   async getBlockStatesGeyser() {
-    const data = fs.readFileSync(join(__dirname, './BedrockData/geyser_block_states.nbt'))
+    const data = fs.readFileSync(d`./mappings-generator/palettes/blockpalette.nbt`)
 
     const { parsed } = await nbt.parse(data)
 
@@ -139,13 +142,16 @@ class BlockMapper {
     return results
   }
 
+  async getBlockStatesAmulet() {
+
+  }
+
   async build(outDir) {
-    const od = outDir || 'output'
+    assert(outDir)
     console.log('writing to', od)
     try {
-      fs.mkdirSync(od)
-      fs.mkdirSync(od + '/blocks')
-    } catch (e) { }
+      fs.mkdirSync(od + '/blocks', { recursive: true })
+    } catch (e) { console.log(e) }
 
     // Copy over blockstates
     const states = await this.getBlockStatesGeyser()
@@ -153,7 +159,7 @@ class BlockMapper {
 
     // * Build Java BSS to Bedrock BSS map
     {
-      this.buildJ2B(join(__dirname, './mappings/blocks.json')) // Geyser mappings
+      this.buildJ2B(d`./mappings/blocks.json`) // Geyser mappings
       fs.writeFileSync(od + '/blocks/Java2Bedrock.json', JSON.stringify(this.j2b, null, 2))
       // console.log('j2b', this.j2b)
     }
@@ -182,18 +188,10 @@ class BlockMapper {
   }
 }
 
-function updateSubmodules() {
-  if (!fs.existsSync(join(__dirname, 'BedrockData'))) cp.execSync('git clone https://github.com/pmmp/BedrockData', { cwd: __dirname })
-  if (!fs.existsSync(join(__dirname, 'mappings'))) cp.execSync('git clone https://github.com/GeyserMC/mappings', { cwd: __dirname })
-  cp.execSync('cd BedrockData && git pull', { cwd: __dirname })
-  cp.execSync('cd mappings && git pull', { cwd: __dirname })
-}
-
-module.exports = async (path) => {
-  updateSubmodules()
-  let builder = new BlockMapper()
+module.exports = async (version, path) => {
+  let builder = new BlockMapper(version)
   await builder.build(path)
   console.log('✔ ok ->', path)
 }
 
-if (!module.parent) module.exports(process.argv[2])
+if (!module.parent) module.exports(null, process.argv[2] || 'output')

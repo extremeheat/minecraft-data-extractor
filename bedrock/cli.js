@@ -7,5 +7,12 @@ if (!command) {
   process.exit(1)
 }
 if (command == 'generate-maps') {
-  require('./map/buildMappings.js')(process.argv[3])
+  require('./map/blockMap.js')(process.argv[3])
 }
+
+async function run(version, outputDir) {
+  await require('./src/deps')(version, outputDir)
+  await require('./src/blockMap')(version, outputDir)
+}
+
+run()

@@ -1,4 +1,4 @@
-map/*
-!map/buildMappings.js
-!map/extraMappings.js
+src/deps
+src/output
+src/result
 __*

@@ -1,6 +1,3 @@
-# js
 *node_modules*
-# python
+package-lock.json
 __*
-src/
-*package-lock.json
