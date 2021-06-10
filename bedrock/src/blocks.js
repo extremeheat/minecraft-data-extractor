@@ -2,6 +2,10 @@ const fs = require('fs')
 const stringify = require("json-stringify-pretty-compact")
 const assert = require('assert')
 
+const strip = k => k.replace('minecraft:', '').split('[')[0]
+const sequential = data => data.every((num, i) => i === data.length - 1 || num < data[i + 1])
+const titleCase = (str) => str.replace(/\b\S/g, t => t.toUpperCase())
+
 module.exports = async (version, outputPath) => {
   const mcData = require('./deps/minecraft-data/data/dataPaths.json')
   const bedrockBlockStates = require(`./${outputPath}/blocks/BlockStates.json`)
@@ -12,10 +16,9 @@ module.exports = async (version, outputPath) => {
 
   const javaBlocks = require(`./deps/minecraft-data/data/${latest.blocks}/blocks.json`)
 
-  const strip = k => k.replace('minecraft:', '').split('[')[0]
 
   const mapJ2B = Object.entries(java2Bedrock).reduce((acc, [k, v]) => { acc[strip(k)] = strip(v); return acc; }, {})
-  const mapB2J = Object.entries(bedrock2Java).reduce((acc, [k, v]) => { acc[strip(k)] = strip(v); return acc; }, {})
+  const mapB2J = Object.entries(bedrock2Java).reduce((acc, [k, v]) => { acc[strip(k)] ??= strip(v); return acc; }, {})
   const out = {}
 
   // console.log(mapB2J)
@@ -28,7 +31,7 @@ module.exports = async (version, outputPath) => {
     out[name].states.push(i)
 
     const javaName = mapB2J[name]
-    // console.log(javaName, name)
+    console.log(javaName, name)
     if (javaName) {
       let found
       for (const javaBlock of javaBlocks) {
@@ -36,15 +39,18 @@ module.exports = async (version, outputPath) => {
           found = true
           const e = { ...javaBlock }
           out[name] = Object.assign(e, out[name])
+          // console.log(name)
+          break
         }
       }
       // if (!found) throw Error('unfound ' + name)
     }
   }
 
-  const fin = Object.values(out).sort((a,b) => a.id - b.id)
-  
-  const sequential = data => data.every((num, i) => i === data.length - 1 || num < data[i + 1])
+  const fin = Object.values(out).sort((a,b) => {
+    console.log('s',a.id, b.id)
+    return (a.id ?? 999) - (b.id ?? 9999)
+  })
   
   for (const entry of fin) {
     // Audit and make sure all of the states are sequential, then update minStateId and maxStateId
@@ -52,6 +58,7 @@ module.exports = async (version, outputPath) => {
     entry.minStateId = entry.states[0]
     entry.maxStateId = entry.states[entry.states.length - 1]
     delete entry.states
+    entry.displayName ??= titleCase(entry.name.replace(/_/g, ' '))
   }
 
   fs.writeFileSync('blocks.json', stringify(fin, { indent: 2, maxLength: 200 }))

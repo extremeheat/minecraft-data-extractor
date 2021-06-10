@@ -5,6 +5,7 @@ function getPatches() {
     "bedrock2java": {
       "minecraft:flowing_water[liquid_depth=0]": "minecraft:water[level=0]",
       "minecraft:flowing_lava[liquid_depth=0]": "minecraft:lava[level=0]",
+      "minecraft:air[]": "minecraft:air[]"
     }
   }
 

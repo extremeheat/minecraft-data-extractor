@@ -26,9 +26,8 @@ class BlockMapper {
       // map[key] = { bid: val.bedrock_identifier, bstates: val.bedrock_states }
       let bkey = val.bedrock_identifier + '[' + this._concatStatesJ2B(val.bedrock_states) + ']'
       key += key.includes('[') ? '' : '[]'
-      map[key] = bkey
+      map[key] ??= bkey
     }
-
     this.j2b = map
   }
 
@@ -67,10 +66,12 @@ class BlockMapper {
 
   buildB2J() {
     let map = {}
+    // const j2bv = Object.keys(this.j2b)
     for (var key in this.j2b) {
       let val = this.j2b[key].replace(/true/g, '1').replace(/false/g, '0')
       // let bkey = val.bid + '[' + this._concatStates(val.bstates) + ']'
       // map[bkey] = { j: key }
+      // console.log(Object.values(this.j2b))
       map[val] = key
     }
 
@@ -146,8 +147,8 @@ class BlockMapper {
 
   }
 
-  async build(outDir) {
-    assert(outDir)
+  async build(od) {
+    assert(od)
     console.log('writing to', od)
     try {
       fs.mkdirSync(od + '/blocks', { recursive: true })
