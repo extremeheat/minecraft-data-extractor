@@ -2,6 +2,7 @@ const fs = require('fs')
 const nbt = require('prismarine-nbt')
 const strip = k => k.replace('minecraft:', '').split('[')[0]
 const tfi = inp => JSON.stringify(inp);
+const stringify = require("json-stringify-pretty-compact")
 
 function flatten(input) {
   let ing = [];
@@ -42,6 +43,7 @@ function flatten(input) {
 module.exports = (version, outputPath) => {
   const craftingData = require(`${outputPath}/packets/crafting_data.json`)
   const itemstates = require(`${outputPath}/packets/start_game.json`).itemstates
+  const uniqueTypes = new Set()
 
   let itemRuntimeId2String = {};
 
@@ -53,34 +55,47 @@ module.exports = (version, outputPath) => {
   const makeOutputItem = _it => {
     let it = typeof _it === 'string' ? JSON.parse(_it) : _it;
     // console.log(it)
+    const name = itemRuntimeId2String[it.network_id]
+    if (!name) throw Error(it.network_id)
     return {
-      name: strip(itemRuntimeId2String[it.network_id] ?? it.network_id),
+      name: strip(name ?? it.network_id),
       metadata: it.metadata,
-      count: it.count,
+      count: it.count ?? 1,
       nbt: it.extra?.nbt
     };
   };
 
   let ret = [];
 
-  for (const recipe of craftingData.recipes) {
+  for (let id in craftingData.recipes) {
+    const recipe = craftingData.recipes[id]
+    id = parseInt(id)
+    uniqueTypes.add(recipe.recipe.block)
+    uniqueTypes.add(recipe.type)
+    const name = recipe.recipe.recipe_id
     if (['shapeless', 'shaped', 'shaped_chemistry', 'shapeless_chemistry'].includes(recipe.type)) {
       const [ing, inp] = flatten(recipe.recipe.input)
       ret.push({
-        type: recipe.type,
-        id: recipe.recipe.recipe_id,
+        type: recipe.recipe.block || recipe.type,
+        id,
+        // block: recipe.recipe.block,
+        name,
         ingredients: ing.map(makeOutputItem),
         input: inp,
         output: recipe.recipe.output.map(makeOutputItem)
       });
     } else if (recipe.type === 'furnace' || recipe.type === 'furnace_with_metadata') {
+      // console.log('INPI', recipe.recipe.input_id)
+      const name = itemRuntimeId2String[recipe.recipe.input_id]
       ret.push({
-        type: 'furnace',
-        id: recipe.recipe.recipe_id,
+        type: recipe.recipe.block || 'furnace',
+        id,
+        // block: recipe.recipe.block,
+        name,
         ingredients: [
-          { name: recipe.recipe.input_id, metadata: recipe.recipe.metadata }
+          { name: strip(name), metadata: recipe.recipe.metadata, count: 1 }
         ],
-        output: makeOutputItem(recipe.recipe.output)
+        output: [makeOutputItem(recipe.recipe.output)]
       });  
     } else if (recipe.type === 'multi') {
 
@@ -88,7 +103,8 @@ module.exports = (version, outputPath) => {
       const [ing, inp] = flatten(recipe.recipe.input);
       ret.push({
         type: 'shulker_box',
-        id: recipe.recipe.recipe_id,
+        id,
+        name,
         ingredients: ing.map(makeOutputItem),
         input: inp,
         output: recipe.recipe.output.map(makeOutputItem),
@@ -98,9 +114,15 @@ module.exports = (version, outputPath) => {
       throw Error(recipe.type + ' is not support')
     }
   }
+ 
+  const final = {}
+  for (const r of ret) {
+    final[r.id] = r
+    delete r.id
+  }
 
-
-  fs.writeFileSync('recipes.json', JSON.stringify(ret, null, 2))
+  console.log(uniqueTypes)
+  fs.writeFileSync('recipes.json', stringify(final, { indent: 2, maxLength: 200 }))
 }
 
 if (!module.parent) module.exports(null, process.argv[2] || './output')

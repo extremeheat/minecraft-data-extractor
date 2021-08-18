@@ -52,6 +52,7 @@ module.exports = async (version, outputPath) => {
         id: undefined,
         displayName: undefined,
         name: undefined,
+        stackSize: 1, // schema required
         ...e,
         name: strip(name),
         variations,
@@ -61,6 +62,7 @@ module.exports = async (version, outputPath) => {
       const mcdItem = javaItems.find(e => e.name === strip(mapped?.[0]?.[1]))
       const entry = ret.push({
         id: bedrockExIx++,
+        stackSize: 1,
         ...mcdItem,
         name: strip(name),
         blockStateId

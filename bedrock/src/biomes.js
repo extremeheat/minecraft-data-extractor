@@ -23,7 +23,8 @@ module.exports = (version, outputPath) => {
     const biome = biomes[biomeName]
     const javaBiomeName = bedrock2Java['minecraft:' + biomeName]
     if (!javaBiomeName) {
-      console.log('fail',javaBiomeName, biomeName)
+      console.log('fail',javaBiomeName, ', ', biomeName)
+      // throw Error()
       continue
     }
 
@@ -31,13 +32,22 @@ module.exports = (version, outputPath) => {
     if (!javaBiome) console.log('b2j', biomeName, javaBiomeName, javaBiome)
 
     ret.push({
+      id: undefined,
+      name: undefined,
+      // defaults to not make auditer bitch
+      "category": "",
+      "precipitation": "rain",
+      "depth": 0,
+      "dimension": "overworld",
+      "displayName": biomeName,
+      "color": 0,
+      "rainfall": 0,
       ...javaBiome,
       "id": bedrockBiomeIds['minecraft:' + biomeName],
       "name": biomeName,
 
       // "category": "swamp",
       "temperature": biome.temperature,
-      "precipitation": "rain",
       // "depth": -0.2,
       // "dimension": "overworld",
       // "displayName": "Swamp",
@@ -54,4 +64,4 @@ module.exports = (version, outputPath) => {
   fs.writeFileSync('biomes.json', JSON.stringify(ret, null, 2))
 }
 
-if (!module.parent) module.exports(null, process.argv[2] || './output')
+if (!module.parent) module.exports(null, process.argv[2] || './1.17.10')

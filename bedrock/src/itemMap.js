@@ -21,7 +21,7 @@ class ItemMapper {
     this.itemstates = {}
 
     for (const state of this.packet.itemstates) {
-      this.itemstates[state.runtime_id] = state
+      this.itemstates[state.name] = state
     }
 
     this.outDir = outDir
@@ -31,7 +31,7 @@ class ItemMapper {
     const map = require(d`mappings/items.json`)
     for (const javaItemName in map) {
       const bedrockItem = map[javaItemName]
-      const mapped = this.itemstates[bedrockItem.bedrock_id]
+      const mapped = this.itemstates[bedrockItem.bedrock_identifier]
       this.j2b[strip(javaItemName)] = strip(mapped.name) + ':' + bedrockItem.bedrock_data
     }
   }
@@ -63,4 +63,4 @@ module.exports = async (version, path) => {
   console.log('✔ ok ->', path)
 }
 
-if (!module.parent) module.exports(null, process.argv[2] || './output')
+if (!module.parent) module.exports(null, process.argv[2] || './1.17.10')

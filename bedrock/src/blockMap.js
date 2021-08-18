@@ -92,8 +92,8 @@ class BlockMapper {
       let fname = ''
       let name = e.name
       let states = ''
-      for (var stateId in e.states?.value) {
-        let stateVal = e.states.value[stateId].value
+      for (var stateId in e.states) {
+        let stateVal = e.states[stateId].value
         if (typeof stateVal == 'object') stateVal = stateVal[1]
         states += stateId + '=' + stateVal + ','
       }
@@ -117,7 +117,7 @@ class BlockMapper {
 
       results.push({
         name: parsed.value.name.value,
-        states: parsed.value.states,
+        states: parsed.value.states.value,
         version: parsed.value.version.value
       })
     }
@@ -134,8 +134,8 @@ class BlockMapper {
 
     for (const block of parsed.value.blocks.value.value) {
       results.push({
-        name: block.name.value,
-        states: block.states,
+        name: block.name.value.replace('minecraft:', ''),
+        states: block.states.value,
         version: block.version.value
       })
     }
