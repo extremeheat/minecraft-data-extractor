@@ -5,7 +5,8 @@ const tfi = inp => JSON.stringify(inp);
 const stringify = require("json-stringify-pretty-compact")
 
 function flatten(input) {
-  let ing = [];
+  const ing = [];
+  const counts = {}
   let result = [];
   if (Array.isArray(input[0])) {
     for (let i = 0; i < input.length; i++) {
@@ -19,6 +20,8 @@ function flatten(input) {
         }
         const ingredient = tfi(inp2);
         if (!ing.includes(ingredient)) ing.push(ingredient);
+        counts[ingredient] ??= 0
+        counts[ingredient]++
         newInpArray.push(ing.indexOf(ingredient) + 1);
       }
       result.push(newInpArray);
@@ -33,11 +36,18 @@ function flatten(input) {
       }
       const ingredient = tfi(inp2);
       if (!ing.includes(ingredient)) ing.push(ingredient);
+      counts[ingredient] ??= 0
+      counts[ingredient]++
       newInpArray.push(ing.indexOf(ingredient) + 1);
     }
     result.push(newInpArray);
   }
-  return [ing, result];
+  const ing2 = ing.map(e => {
+    const x = JSON.parse(e);
+    x.count = counts[e] || x.count;
+    return x;
+  })
+  return [ing2, result];
 }
 
 module.exports = (version, outputPath) => {
@@ -57,6 +67,7 @@ module.exports = (version, outputPath) => {
     // console.log(it)
     const name = itemRuntimeId2String[it.network_id]
     if (!name) throw Error(it.network_id)
+    console.log('count', it.count)
     return {
       name: strip(name ?? it.network_id),
       metadata: it.metadata,
@@ -96,7 +107,7 @@ module.exports = (version, outputPath) => {
           { name: strip(name), metadata: recipe.recipe.metadata, count: 1 }
         ],
         output: [makeOutputItem(recipe.recipe.output)]
-      });  
+      });
     } else if (recipe.type === 'multi') {
 
     } else if (recipe.type === 'shulker_box') {
@@ -114,7 +125,7 @@ module.exports = (version, outputPath) => {
       throw Error(recipe.type + ' is not support')
     }
   }
- 
+
   const final = {}
   for (const r of ret) {
     final[r.id] = r
