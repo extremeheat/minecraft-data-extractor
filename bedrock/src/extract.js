@@ -1,4 +1,4 @@
-async function run(version, outputDir = 'output') {
+async function run(version, outputDir = './output') {
   console.log('🔻 Downloading dependencies...')
   // await require('./deps')(version, outputDir)
   console.log('🔁 Generating block map')

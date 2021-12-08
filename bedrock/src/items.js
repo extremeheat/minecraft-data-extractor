@@ -7,9 +7,9 @@ const titleCase = (str) => str.replace(/\b\S/g, t => t.toUpperCase())
 
 module.exports = async (version, outputPath) => {
   const mcData = require('./deps/minecraft-data/data/dataPaths.json')
-  const bedrockBlockStates = require(`./${outputPath}/blocks/BlockStates.json`)
-  const java2Bedrock = require(`./${outputPath}/items/Java2Bedrock.json`)
-  const bedrock2Java = require(`./${outputPath}/items/Bedrock2Java.json`)
+  const bedrockBlockStates = require(`${outputPath}/blocks/BlockStates.json`)
+  const java2Bedrock = require(`${outputPath}/items/Java2Bedrock.json`)
+  const bedrock2Java = require(`${outputPath}/items/Bedrock2Java.json`)
 
   const [[latestVer, latest]] = Object.entries(mcData.pc).slice(-1)
   console.log('latest', latestVer, latest)
@@ -77,7 +77,7 @@ module.exports = async (version, outputPath) => {
   }
 
   console.log(ret)
-  fs.writeFileSync('./items.json', JSON.stringify(ret, null, 2))
+  fs.writeFileSync(outputPath + '/items.json', JSON.stringify(ret, null, 2))
 }
 
 if (!module.parent) module.exports(null, process.argv[2] || './output')

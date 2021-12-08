@@ -140,7 +140,7 @@ const s = `
 
 const strip = k => k?.replace('minecraft:', '').split('[')[0]
 
-module.exports = (version, outDir) => {
+module.exports = (version, outputPath) => {
   const mcData = require('./deps/minecraft-data/data/dataPaths.json')
   const [[latestVer, latest]] = Object.entries(mcData.pc).slice(-1)
   console.log('latest', latestVer, latest)
@@ -165,6 +165,6 @@ module.exports = (version, outDir) => {
     }
   }
 
-  fs.writeFileSync('entities.json', JSON.stringify(mobs, null, 2))
+  fs.writeFileSync(outputPath + '/entities.json', JSON.stringify(mobs, null, 2))
 }
 if (!module.parent) module.exports(null, 'output')

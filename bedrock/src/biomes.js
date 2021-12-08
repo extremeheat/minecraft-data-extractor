@@ -6,9 +6,9 @@ module.exports = (version, outputPath) => {
   const biomes = nbt.simplify(require(`${outputPath}/packets/biome_definition_list.json`).nbt)
   // console.log('Biomes', biomes)
 
-  const bedrockBiomeIds = require(`./${outputPath}/biome/Biomes.json`)
-  const java2Bedrock = require(`./${outputPath}/biome/Java2Bedrock.json`)
-  const bedrock2Java = require(`./${outputPath}/biome/Bedrock2Java.json`)
+  const bedrockBiomeIds = require(`${outputPath}/biome/Biomes.json`)
+  const java2Bedrock = require(`${outputPath}/biome/Java2Bedrock.json`)
+  const bedrock2Java = require(`${outputPath}/biome/Bedrock2Java.json`)
   
   const mcData = require('./deps/minecraft-data/data/dataPaths.json')
   const [[latestVer, latest]] = Object.entries(mcData.pc).slice(-1)
@@ -61,7 +61,7 @@ module.exports = (version, outputPath) => {
 
   ret = ret.sort((a,b) => a.id - b.id)
 
-  fs.writeFileSync('biomes.json', JSON.stringify(ret, null, 2))
+  fs.writeFileSync(outputPath + '/biomes.json', JSON.stringify(ret, null, 2))
 }
 
 if (!module.parent) module.exports(null, process.argv[2] || './1.17.10')
