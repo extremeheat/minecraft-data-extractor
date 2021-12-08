@@ -33,7 +33,7 @@ module.exports = (version, outputPath) => {
     for (const i in bedrockBlockStates) {
       const block = bedrockBlockStates[i]
       // console.log(block.name, name, states)
-      if (block.name === name) {
+      if (block.name === name.replace('minecraft:', '')) {
         let failed
         if (!states) return i
         for (const [state, value] of Object.entries(states)) {
@@ -66,6 +66,8 @@ module.exports = (version, outputPath) => {
     // Put a second map into `o` that maps state IDs for each of the bedrock block names
     // to a collision index.
     const stateID = getStateIDFor(maping.bedrock_identifier, maping.bedrock_states)
+    // console.log('stateID', stateID, maping)
+    assert(stateID, `Could not find stateID for ${maping.bedrock_identifier}`)
     o[stateID] = maping.collision_index
 
     // Make sure that the `o` map's keys of BRIDs are sequential and don't have any gaps.
@@ -104,10 +106,9 @@ module.exports = (version, outputPath) => {
     out[key] = next
     console.log('Next', next, minStateId, keys[keys.length - 1])
     if (next.length < keys.length) throw Error()
-
   }
-
-  fs.writeFileSync('blockColissionShapes.json', stringify({ blocks: out, shapes: col }, { indent: '\t', maxLength: 9999 }))
+  
+  fs.writeFileSync(outputPath + '/blockCollisionShapes.json', stringify({ blocks: out, shapes: col }, { indent: '\t', maxLength: 19999 }))
 
   // console.log(out)
 }

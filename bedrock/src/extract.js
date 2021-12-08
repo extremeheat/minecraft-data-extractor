@@ -25,4 +25,4 @@ async function run(version, outputDir = './output') {
 }
 
 module.exports = run
-if (!module.parent) run('1.17.10', './1.17.10')
+if (!module.parent) run('1.18.0')

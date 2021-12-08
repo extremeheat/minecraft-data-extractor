@@ -15,6 +15,7 @@ class ItemMapper {
     try {
       this.packet = require(`${outDir}/packets/start_game.json`)
     } catch (e) {
+      console.log(e)
       throw Error('You need to dump the packets first, please see the README.md file')
     }
 

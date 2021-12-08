@@ -133,7 +133,7 @@ module.exports = (version, outputPath) => {
   }
 
   console.log(uniqueTypes)
-  fs.writeFileSync('recipes.json', stringify(final, { indent: 2, maxLength: 200 }))
+  fs.writeFileSync(outputPath + '/recipes.json', stringify(final, { indent: 2, maxLength: 200 }))
 }
 
 if (!module.parent) module.exports(null, process.argv[2] || './output')

@@ -1,8 +1,8 @@
 const fs = require('fs')
 
 module.exports = (version, outDir) => {
-  const javaData = require('./deps/PyMCTranslate/PyMCTranslate/json/versions/java_1_17_0/__biome_data__.json')
-  const bedrockData = require('./deps/PyMCTranslate/PyMCTranslate/json/versions/bedrock_1_17_0/__biome_data__.json')
+  const javaData = require(`./deps/PyMCTranslate/PyMCTranslate/json/versions/java_1_18_0/__biome_data__.json`)
+  const bedrockData = require(`./deps/PyMCTranslate/PyMCTranslate/json/versions/bedrock_1_18_0/__biome_data__.json`)
 
   const b = {}
   const j = {}
