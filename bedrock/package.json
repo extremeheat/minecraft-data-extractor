@@ -1,6 +1,6 @@
 {
   "name": "bedrock-extractor",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "minecraft bedrock data extractor",
   "main": "index.js",
   "bin": {
@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "prismarine-nbt": "^1.5.0"
+    "prismarine-nbt": "^1.5.0",
+    "json-stringify-pretty-compact": "^1.0.1"
   }
 }

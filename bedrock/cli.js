@@ -7,5 +7,9 @@ if (!command) {
   process.exit(1)
 }
 if (command == 'generate-maps') {
-  cp.execSync('node map/buildMappings.js ' + process.argv[3], { stdio: 'inherit' })
+  require('./src/blockMap.js')(process.argv[3])
 }
+
+
+
+// run()

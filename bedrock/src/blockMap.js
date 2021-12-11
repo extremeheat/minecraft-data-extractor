@@ -1,10 +1,14 @@
 const fs = require('fs')
 const nbt = require('prismarine-nbt')
-const cp = require('child_process')
+const extras = require('./extraMappings')
 const { join } = require('path')
+const assert = require('assert')
+
+const d = ([path]) => join(__dirname, 'deps', path)
 
 class BlockMapper {
-  constructor() {
+  constructor(version) {
+    this.version = version
     this.j2b = {}
     this.j2brid = {}
     this.b2j = {}
@@ -20,11 +24,10 @@ class BlockMapper {
     for (var key in blocksJson) {
       let val = blocksJson[key]
       // map[key] = { bid: val.bedrock_identifier, bstates: val.bedrock_states }
-      let bkey = val.bedrock_identifier + '[' + this._concatStates(val.bedrock_states) + ']'
+      let bkey = val.bedrock_identifier + '[' + this._concatStatesJ2B(val.bedrock_states) + ']'
       key += key.includes('[') ? '' : '[]'
-      map[key] = bkey
+      map[key] ??= bkey
     }
-
     this.j2b = map
   }
 
@@ -48,7 +51,7 @@ class BlockMapper {
     this.j2brid = out
   }
 
-  _concatStates(states) {
+  _concatStatesJ2B(states) {
     let str = ''
     if (!states) return str
 
@@ -63,11 +66,19 @@ class BlockMapper {
 
   buildB2J() {
     let map = {}
+    // const j2bv = Object.keys(this.j2b)
     for (var key in this.j2b) {
       let val = this.j2b[key].replace(/true/g, '1').replace(/false/g, '0')
       // let bkey = val.bid + '[' + this._concatStates(val.bstates) + ']'
       // map[bkey] = { j: key }
+      // console.log(Object.values(this.j2b))
       map[val] = key
+    }
+
+    const ex = extras.getPatches()
+    for (const key in ex.bedrock2java) {
+      let val = ex.bedrock2java[key]
+      map[key] = val
     }
     this.b2j = map
   }
@@ -76,13 +87,13 @@ class BlockMapper {
     const data = states
     let array = new Uint16Array(data.length)
     for (var i = 0; i < data.length; i++) {
-      let e = data[i].value
+      let e = data[i]
       // console.log(e)
       let fname = ''
-      let name = e.name.value
+      let name = e.name
       let states = ''
-      for (var stateId in e.states?.value) {
-        let stateVal = e.states.value[stateId].value
+      for (var stateId in e.states) {
+        let stateVal = e.states[stateId].value
         if (typeof stateVal == 'object') stateVal = stateVal[1]
         states += stateId + '=' + stateVal + ','
       }
@@ -95,35 +106,61 @@ class BlockMapper {
     // this.brid2jsid
   }
 
-  async getBlockStates() {
-    const data = fs.readFileSync(join(__dirname, './BedrockData/canonical_block_states.nbt'))
+  async getBlockStatesPMMP() {
+    const data = fs.readFileSync(d`./BedrockData/canonical_block_states.nbt`)
     let results = []
     data.startOffset = 0
 
-    while (data.startOffset !== data.length) {
+    while (data.startOffset !== data.byteLength) {
       const { parsed, metadata } = await nbt.parse(data)
       data.startOffset += metadata.size
-      results.push(parsed)
+
+      results.push({
+        name: parsed.value.name.value,
+        states: parsed.value.states.value,
+        version: parsed.value.version.value
+      })
     }
 
     return results
   }
 
-  async build(outDir) {
-    const od = outDir || 'output'
+  async getBlockStatesGeyser() {
+    const data = fs.readFileSync(d`./mappings-generator/palettes/blockpalette.nbt`)
+
+    const { parsed } = await nbt.parse(data)
+
+    const results = []
+
+    for (const block of parsed.value.blocks.value.value) {
+      results.push({
+        name: block.name.value.replace('minecraft:', ''),
+        states: block.states.value,
+        version: block.version.value
+      })
+    }
+
+    return results
+  }
+
+  async getBlockStatesAmulet() {
+
+  }
+
+  async build(od) {
+    assert(od)
     console.log('writing to', od)
     try {
-      fs.mkdirSync(od)
-      fs.mkdirSync(od + '/blocks')
-    } catch (e) { }
+      fs.mkdirSync(od + '/blocks', { recursive: true })
+    } catch (e) { console.log(e) }
 
     // Copy over blockstates
-    const states = await this.getBlockStates()
-    fs.writeFileSync(od + '/blocks/BlockStates.json', JSON.stringify(states, null, 2))
+    const states = await this.getBlockStatesGeyser()
+    fs.writeFileSync(od + '/blocks/BlockStates.json', JSON.stringify(states, null, '\t'))
 
     // * Build Java BSS to Bedrock BSS map
     {
-      this.buildJ2B(join(__dirname, './mappings/blocks.json')) // Geyser mappings
+      this.buildJ2B(d`./mappings/blocks.json`) // Geyser mappings
       fs.writeFileSync(od + '/blocks/Java2Bedrock.json', JSON.stringify(this.j2b, null, 2))
       // console.log('j2b', this.j2b)
     }
@@ -152,14 +189,10 @@ class BlockMapper {
   }
 }
 
-function updateSubmodules() {
-  if (!fs.existsSync(join(__dirname, 'BedrockData'))) cp.execSync('git clone https://github.com/pmmp/BedrockData', { cwd: __dirname })
-  if (!fs.existsSync(join(__dirname, 'mappings'))) cp.execSync('git clone https://github.com/GeyserMC/mappings', { cwd: __dirname })
-  cp.execSync('cd BedrockData && git pull', { cwd: __dirname })
-  cp.execSync('cd mappings && git pull', { cwd: __dirname })
+module.exports = async (version, path) => {
+  let builder = new BlockMapper(version)
+  await builder.build(path)
+  console.log('✔ ok ->', path)
 }
 
-updateSubmodules()
-let builder = new BlockMapper()
-builder.build(process.argv[2])
-console.log('✔ ok ->', process.argv[2])
+if (!module.parent) module.exports(null, process.argv[2] || 'output')

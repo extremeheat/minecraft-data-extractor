@@ -1,3 +1,5 @@
-map/*
-!map/buildMappings.js
+src/deps
+src/output
+src/result
+src/1.*
 __*
