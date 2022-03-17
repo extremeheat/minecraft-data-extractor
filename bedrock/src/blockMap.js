@@ -116,7 +116,7 @@ class BlockMapper {
       data.startOffset += metadata.size
 
       results.push({
-        name: parsed.value.name.value,
+        name: parsed.value.name.value.replace('minecraft:', ''),
         states: parsed.value.states.value,
         version: parsed.value.version.value
       })
@@ -147,6 +147,11 @@ class BlockMapper {
 
   }
 
+  ppB2J(blockStates) {
+    const pp = extras.postProcessB2J(blockStates, this.b2j)
+    return pp
+  }
+
   async build(od) {
     assert(od)
     console.log('writing to', od)
@@ -155,7 +160,7 @@ class BlockMapper {
     } catch (e) { console.log(e) }
 
     // Copy over blockstates
-    const states = await this.getBlockStatesGeyser()
+    const states = await this.getBlockStatesPMMP()
     fs.writeFileSync(od + '/blocks/BlockStates.json', JSON.stringify(states, null, '\t'))
 
     // * Build Java BSS to Bedrock BSS map
@@ -185,6 +190,14 @@ class BlockMapper {
     {
       this.buildJ2Bruntimeid()
       fs.writeFileSync(od + '/blocks/J2BRID.json', JSON.stringify(this.j2brid))
+    }
+
+    // Post process blocks to add extra data for Bedrock -> Java mappings, making sure
+    // that all of the bedrock block states have a Java mapping (schema is a bit different,
+    // for easier parsing)
+    {
+      const pp = this.ppB2J(states)
+      fs.writeFileSync(od + '/blocks/blocksB2J.json', JSON.stringify(pp, null, 2))
     }
   }
 }

@@ -32,3 +32,5 @@ module.exports = version => {
   if (!fs.existsSync(join(__dirname, 'deps'))) fs.mkdirSync(join(__dirname, 'deps'))
   updateSubmodules()
 }
+
+updateSubmodules()
