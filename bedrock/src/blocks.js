@@ -42,7 +42,7 @@ module.exports = async (version, outputPath) => {
         if (javaBlock.name === javaName) {
           found = true
           // delete javaBlock.id
-          const e = { ...javaBlock }
+          const e = { id: undefined, name: undefined, ...javaBlock }
           out[name] = Object.assign(e, out[name])
           // console.log(name)
           break
@@ -94,4 +94,6 @@ module.exports = async (version, outputPath) => {
   fs.writeFileSync(outputPath + '/blocks.json', stringify(fin, { indent: 2, maxLength: 200 }))
 }
 
-if (!module.parent) module.exports(null, '1.17.10')
+// if (!module.parent) module.exports(null, '1.17.10')
+
+module.exports(null, '1.17.0')

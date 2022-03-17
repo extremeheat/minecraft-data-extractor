@@ -86,8 +86,9 @@ module.exports = (version, outputPath) => {
     const name = recipe.recipe.recipe_id
     if (['shapeless', 'shaped', 'shaped_chemistry', 'shapeless_chemistry'].includes(recipe.type)) {
       const [ing, inp] = flatten(recipe.recipe.input)
+      const type = recipe.recipe.block || recipe.type
       ret.push({
-        type: recipe.recipe.block || recipe.type,
+        type: (recipe.type === 'shapeless' && recipe.recipe.block === 'crafting_table') ? 'crafting_table_shapeless' : type,
         id,
         // block: recipe.recipe.block,
         name,

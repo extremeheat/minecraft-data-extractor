@@ -1,4 +1,5 @@
 const fs = require('fs')
+const nbt = require('prismarine-nbt')
 const s = `
     CHICKEN(ChickenEntity.class, 10, 0.7f, 0.4f),
     COW(AnimalEntity.class, 11, 1.4f, 0.9f),
@@ -154,17 +155,64 @@ module.exports = (version, outputPath) => {
   let ix = 0
   for (const line of s.split(/\n/g)) {
     if (line.endsWith(',') || line.endsWith(';')) {
-      const d = line.replace(/\(|\)|\,|;/g,  ' ').trim()
+      const d = line.replace(/\(|\)|\,|;/g, ' ').trim()
       // console.log(d, d.split(/ +/g))
-      let [ id, entityClass, type, height, width, length, offset, identifier ] = d.split(/ +/g)
+      let [id, entityClass, type, height, width, length, offset, identifier] = d.split(/ +/g)
       console.log(id, entityClass, type, height, width, length, offset, identifier)
       id = id.toLowerCase()
       if (identifier) identifier = JSON.parse(identifier)
-      
-      mobs[id] = { ...javaMap[id], id: ix++, internalId: parseInt(type), name: strip(identifier) ?? id, height: parseFloat(height),  width: parseFloat(width), length: parseFloat(length), offset: parseFloat(offset) }
+
+      mobs[id] = {
+        // Just to maintain proper order
+        id: undefined,
+        internalId: undefined,
+        name: strip(identifier),
+        displayName: strip(identifier) ?? id,
+        height: null,
+        width: null,
+        length: null,
+        offset: undefined,
+        type: '',
+        category: 'UNKNOWN',
+
+        ...javaMap[id],
+        id: ix++,
+        internalId: parseInt(type),
+        name: strip(identifier) ?? id,
+        height: parseFloat(height),
+        width: parseFloat(width),
+        length: parseFloat(length),
+        offset: parseFloat(offset),
+      }
     }
   }
 
-  fs.writeFileSync(outputPath + '/entities.json', JSON.stringify(mobs, null, 2))
+  const allActualEntities = require('./output/packets/available_entity_identifiers.json')
+  const tag = nbt.simplify(allActualEntities.nbt)
+  // console.log(tag.idlist)
+  for (const entity of tag.idlist) {
+    if (!Object.values(mobs).some(mob => mob.name === entity.id.replace('minecraft:', ''))) {
+      console.log('missing entity added', entity.id)
+      const added = {
+        name: entity.id.replace('minecraft:', ''),
+        internalId: entity.rid,
+        id: ++ix,
+
+
+        displayName: strip(entity.id),
+        "width": null,
+        "height": null,
+        "length": null,
+        "offset": null,
+
+        "type": "",
+        "category": "UNKNOWN",
+      }
+      mobs[added.name] = added
+    }
+  }
+
+  fs.writeFileSync(outputPath + '/entities.json', JSON.stringify(Object.values(mobs), null, 2))
 }
+
 if (!module.parent) module.exports(null, 'output')

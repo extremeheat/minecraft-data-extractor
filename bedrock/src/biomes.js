@@ -12,8 +12,8 @@ module.exports = (version, outputPath) => {
   
   const mcData = require('./deps/minecraft-data/data/dataPaths.json')
   const [[latestVer, latest]] = Object.entries(mcData.pc).slice(-1)
-  console.log('latest', latestVer, latest)
-  const javaBiomes = require(`./deps/minecraft-data/data/${'pc/1.16.2' || latest.blocks}/biomes.json`)
+  // console.log('latest', latestVer, latest)
+  const javaBiomes = require(`./deps/minecraft-data/data/${latest.biomes}/biomes.json`)
 
   const javaBiomeMapped = {}
   javaBiomes.forEach(e => javaBiomeMapped[e.name] = e)
@@ -24,12 +24,15 @@ module.exports = (version, outputPath) => {
     const javaBiomeName = bedrock2Java['minecraft:' + biomeName]
     if (!javaBiomeName) {
       console.log('fail',javaBiomeName, ', ', biomeName)
-      // throw Error()
+      throw Error()
       continue
     }
 
     const javaBiome = javaBiomeMapped[strip(javaBiomeName)]
-    if (!javaBiome) console.log('b2j', biomeName, javaBiomeName, javaBiome)
+    if (!javaBiome) {
+      throw Error(`${javaBiomeName} not found in ${latest.biomes}`)
+      // console.log('b2j', biomeName, javaBiomeName, javaBiome)
+    }
 
     ret.push({
       id: undefined,
@@ -64,4 +67,4 @@ module.exports = (version, outputPath) => {
   fs.writeFileSync(outputPath + '/biomes.json', JSON.stringify(ret, null, 2))
 }
 
-if (!module.parent) module.exports(null, process.argv[2] || './1.17.10')
+if (!module.parent) module.exports(null, process.argv[2] || './output')
